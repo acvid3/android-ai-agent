@@ -1,8 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AI Agent</string>
+    <string name="app_tagline">Universal Android automation agent MVP</string>
     <string name="overlay_icon">AI Agent</string>
     <string name="accessibility_service_description">AI Agent accessibility service</string>
     <string name="permission_required">Accessibility service permission required</string>
     <string name="enable_accessibility">Enable Accessibility Service</string>
+    <string name="api_key_label">API Key</string>
+    <string name="api_key_hint">Paste your API key here</string>
+    <string name="tracking_label">Enable tracking</string>
+    <string name="save_settings">Save Settings</string>
+    <string name="start_service">Start Service</string>
+    <string name="status_idle">Status: idle</string>
+    <string name="status_running">Status: running</string>
+    <string name="status_tracking_on">Tracking: on</string>
+    <string name="status_tracking_off">Tracking: off</string>
+    <string name="suggestion_title">Repeat detected. Auto-action available?</string>
+    <string name="suggestion_yes">YES</string>
+    <string name="suggestion_no">NO</string>
 </resources>

@@ -1,65 +1,67 @@
 package com.androidaiagent.accessibility
 
 import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.GestureDescription
-import android.graphics.Path
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.view.accessibility.AccessibilityEvent
+import com.androidaiagent.settings.AppSettingsStore
+import com.androidaiagent.tracking.UserActionRecord
+import com.androidaiagent.tracking.UserActionTracker
 
 class AccessibilityService : AccessibilityService() {
-    
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        UserActionTracker.init(applicationContext)
+
+        serviceInfo = serviceInfo.apply {
+            eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
+                AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED or
+                AccessibilityEvent.TYPE_VIEW_CLICKED or
+                AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED
+            feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
+            flags = flags or AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
+        }
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        event?.let { handleEvent(it) }
+        val currentEvent = event ?: return
+        if (!AppSettingsStore.isTrackingEnabled(applicationContext)) return
+
+        val packageName = currentEvent.packageName?.toString() ?: return
+        val actionType = when (currentEvent.eventType) {
+            AccessibilityEvent.TYPE_VIEW_CLICKED -> "CLICK"
+            AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> "TEXT_INPUT"
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> "SCREEN_CHANGED"
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> "CONTENT_CHANGED"
+            else -> return
+        }
+
+        val uiContext = buildUiContext(currentEvent)
+        val text = currentEvent.text?.joinToString(" ")?.takeIf { it.isNotBlank() }
+
+        UserActionTracker.record(
+            UserActionRecord(
+                appPackage = packageName,
+                timestamp = System.currentTimeMillis(),
+                actionType = actionType,
+                uiContext = uiContext,
+                text = text
+            )
+        )
     }
 
-    private fun handleEvent(event: AccessibilityEvent) {
-        when (event.eventType) {
-            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> onWindowStateChanged(event)
-            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> onWindowContentChanged(event)
+    private fun buildUiContext(event: AccessibilityEvent): String? {
+        val source = event.source ?: return event.className?.toString()
+        return try {
+            val parts = listOfNotNull(
+                source.className?.toString(),
+                source.viewIdResourceName,
+                source.text?.toString()
+            )
+            parts.takeIf { it.isNotEmpty() }?.joinToString("|")
+        } finally {
+            source.recycle()
         }
     }
 
-    private fun onWindowStateChanged(event: AccessibilityEvent) {
-        // Handle screen changes
-    }
-
-    private fun onWindowContentChanged(event: AccessibilityEvent) {
-        // Handle content changes
-    }
-
-    fun performClick(x: Float, y: Float): Boolean {
-        val path = Path().apply {
-            moveTo(x, y)
-        }
-        val gesture = GestureDescription.Builder()
-            .addStroke(GestureDescription.StrokeDescription(path, 0, 100))
-            .build()
-        return dispatchGesture(gesture, null, null)
-    }
-
-    fun performSwipe(x1: Float, y1: Float, x2: Float, y2: Float, duration: Long): Boolean {
-        val path = Path().apply {
-            moveTo(x1, y1)
-            lineTo(x2, y2)
-        }
-        val gesture = GestureDescription.Builder()
-            .addStroke(GestureDescription.StrokeDescription(path, 0, duration))
-            .build()
-        return dispatchGesture(gesture, null, null)
-    }
-
-    fun performLongPress(x: Float, y: Float, duration: Long = 500L): Boolean {
-        val path = Path().apply {
-            moveTo(x, y)
-        }
-        val gesture = GestureDescription.Builder()
-            .addStroke(GestureDescription.StrokeDescription(path, 0, duration))
-            .build()
-        return dispatchGesture(gesture, null, null)
-    }
-
-    fun performBack(): Boolean {
-        return performGlobalAction(GLOBAL_ACTION_BACK)
-    }
-
-    override fun onInterrupt() {}
+    override fun onInterrupt() = Unit
 }

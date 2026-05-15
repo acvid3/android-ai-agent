@@ -33,6 +33,11 @@
             android:foregroundServiceType="mediaProjection"
             android:exported="false" />
 
+        <service
+            android:name=".overlay.OverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

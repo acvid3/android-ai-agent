@@ -39,6 +39,7 @@ import com.androidaiagent.vision.ModalDetectionEngine
 import com.androidaiagent.runtime.ResourceManager
 import com.androidaiagent.learning.TrainingDataStore
 import com.androidaiagent.diagnostics.DiagnosticsSystem
+import com.androidaiagent.settings.AppSettingsStore
 import com.androidaiagent.metrics.LatencyProfiler
 import com.androidaiagent.metrics.LatencySnapshot
 import com.androidaiagent.core.confidence.ConfidenceEngine
@@ -281,7 +282,10 @@ class AgentRuntimeManager(
         safetyValidator = SafetyValidator()
         
         aiProvider = if (runtimeMode != RuntimeMode.FULL_AUTONOMOUS) {
-            com.androidaiagent.ai.AIProviderFactory.createProvider("openai")
+            com.androidaiagent.ai.AIProviderFactory.createProvider(
+                provider = "openai",
+                apiKey = AppSettingsStore.getApiKey(context)
+            )
         } else {
             null
         }
