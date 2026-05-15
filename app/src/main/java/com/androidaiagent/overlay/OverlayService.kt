@@ -10,6 +10,7 @@ import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager
 import android.widget.Button
@@ -35,23 +36,36 @@ class OverlayService : Service() {
     private var overlayButton: Button? = null
     private var suggestionView: LinearLayout? = null
 
+    companion object {
+        private const val TAG = "OverlayService"
+    }
+
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "onCreate: OverlayService starting")
         UserActionTracker.init(applicationContext)
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         startAsForeground()
         createOverlay()
         observeSuggestions()
+        Log.d(TAG, "onCreate: OverlayService initialized successfully")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "onStartCommand: Service command received")
         if (overlayButton == null && android.provider.Settings.canDrawOverlays(this)) {
+            Log.d(TAG, "onStartCommand: Creating overlay (permission granted)")
             createOverlay()
+        } else if (overlayButton == null) {
+            Log.w(TAG, "onStartCommand: Cannot create overlay - permission not granted")
+        } else {
+            Log.d(TAG, "onStartCommand: Overlay already exists")
         }
         return START_STICKY
     }
 
     private fun startAsForeground() {
+        Log.d(TAG, "startAsForeground: Starting foreground service with notification")
         val channelId = "overlay_service_channel"
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -61,6 +75,7 @@ class OverlayService : Service() {
                 NotificationManager.IMPORTANCE_LOW
             )
             notificationManager.createNotificationChannel(channel)
+            Log.d(TAG, "startAsForeground: Notification channel created")
         }
 
         val launchIntent = Intent(this, MainActivity::class.java)
@@ -80,14 +95,20 @@ class OverlayService : Service() {
             .build()
 
         startForeground(1001, notification)
+        Log.d(TAG, "startAsForeground: Foreground service started with notification ID 1001")
     }
 
     private fun createOverlay() {
-        if (!android.provider.Settings.canDrawOverlays(this)) return
+        Log.d(TAG, "createOverlay: Attempting to create overlay")
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            Log.w(TAG, "createOverlay: Cannot create overlay - permission not granted")
+            return
+        }
 
         val button = Button(this).apply {
             text = "AI"
             setOnClickListener {
+                Log.d(TAG, "Overlay button clicked - opening MainActivity")
                 val intent = Intent(this@OverlayService, MainActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
@@ -107,7 +128,12 @@ class OverlayService : Service() {
             y = 120
         }
 
-        windowManager?.addView(button, params)
+        try {
+            windowManager?.addView(button, params)
+            Log.d(TAG, "createOverlay: Overlay button added successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "createOverlay: Failed to add overlay button", e)
+        }
     }
 
     private fun observeSuggestions() {
@@ -124,7 +150,11 @@ class OverlayService : Service() {
     }
 
     private fun showSuggestion(suggestion: PatternSuggestion) {
-        if (!android.provider.Settings.canDrawOverlays(this)) return
+        Log.d(TAG, "showSuggestion: Showing suggestion for ${suggestion.appPackage} - ${suggestion.actionType} x${suggestion.repeatCount}")
+        if (!android.provider.Settings.canDrawOverlays(this)) {
+            Log.w(TAG, "showSuggestion: Cannot show suggestion - permission not granted")
+            return
+        }
         dismissSuggestion()
 
         val panel = LinearLayout(this).apply {
@@ -148,6 +178,7 @@ class OverlayService : Service() {
                 addView(Button(this@OverlayService).apply {
                     text = getString(R.string.suggestion_yes)
                     setOnClickListener {
+                        Log.d(TAG, "Suggestion accepted by user")
                         UserActionTracker.record(
                             com.androidaiagent.tracking.UserActionRecord(
                                 appPackage = suggestion.appPackage,
@@ -164,6 +195,7 @@ class OverlayService : Service() {
                 addView(Button(this@OverlayService).apply {
                     text = getString(R.string.suggestion_no)
                     setOnClickListener {
+                        Log.d(TAG, "Suggestion rejected by user")
                         PatternSuggestionStore.dismiss()
                     }
                 })
@@ -183,21 +215,37 @@ class OverlayService : Service() {
             y = 160
         }
 
-        windowManager?.addView(panel, params)
+        try {
+            windowManager?.addView(panel, params)
+            Log.d(TAG, "showSuggestion: Suggestion panel added successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "showSuggestion: Failed to add suggestion panel", e)
+        }
     }
 
     private fun dismissSuggestion() {
+        Log.d(TAG, "dismissSuggestion: Dismissing suggestion")
         suggestionView?.let { view ->
-            runCatching { windowManager?.removeView(view) }
+            runCatching {
+                windowManager?.removeView(view)
+                Log.d(TAG, "dismissSuggestion: Suggestion view removed")
+            }
         }
         suggestionView = null
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "onDestroy: OverlayService destroying")
         super.onDestroy()
         suggestionJob?.cancel()
-        overlayButton?.let { runCatching { windowManager?.removeView(it) } }
+        overlayButton?.let {
+            runCatching {
+                windowManager?.removeView(it)
+                Log.d(TAG, "onDestroy: Overlay button removed")
+            }
+        }
         dismissSuggestion()
+        Log.d(TAG, "onDestroy: OverlayService destroyed")
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

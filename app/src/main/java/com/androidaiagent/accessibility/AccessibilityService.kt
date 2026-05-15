@@ -2,14 +2,21 @@ package com.androidaiagent.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.androidaiagent.settings.AppSettingsStore
 import com.androidaiagent.tracking.UserActionRecord
 import com.androidaiagent.tracking.UserActionTracker
 
 class AccessibilityService : AccessibilityService() {
+    companion object {
+        private const val TAG = "AccessibilityService"
+        private var currentPackageName: String? = null
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
+        Log.d(TAG, "onServiceConnected: AccessibilityService connected")
         UserActionTracker.init(applicationContext)
 
         serviceInfo = serviceInfo.apply {
@@ -20,6 +27,7 @@ class AccessibilityService : AccessibilityService() {
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
             flags = flags or AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
         }
+        Log.d(TAG, "onServiceConnected: Service info configured")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -27,6 +35,13 @@ class AccessibilityService : AccessibilityService() {
         if (!AppSettingsStore.isTrackingEnabled(applicationContext)) return
 
         val packageName = currentEvent.packageName?.toString() ?: return
+
+        // Log packageName changes for validation
+        if (currentPackageName != packageName) {
+            Log.d(TAG, "Package changed: $currentPackageName -> $packageName")
+            currentPackageName = packageName
+        }
+
         val actionType = when (currentEvent.eventType) {
             AccessibilityEvent.TYPE_VIEW_CLICKED -> "CLICK"
             AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> "TEXT_INPUT"
@@ -37,6 +52,8 @@ class AccessibilityService : AccessibilityService() {
 
         val uiContext = buildUiContext(currentEvent)
         val text = currentEvent.text?.joinToString(" ")?.takeIf { it.isNotBlank() }
+
+        Log.d(TAG, "Event: $actionType | Package: $packageName | Context: $uiContext | Text: $text")
 
         UserActionTracker.record(
             UserActionRecord(
@@ -63,5 +80,7 @@ class AccessibilityService : AccessibilityService() {
         }
     }
 
-    override fun onInterrupt() = Unit
+    override fun onInterrupt() {
+        Log.w(TAG, "onInterrupt: AccessibilityService interrupted")
+    }
 }
