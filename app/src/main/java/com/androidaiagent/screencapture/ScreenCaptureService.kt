@@ -50,8 +50,9 @@ class ScreenCaptureService : Service() {
     }
 
     fun startCapture(resultCode: Int, data: Intent?) {
+        val intent = data ?: return
         val projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        mediaProjection = projectionManager.getMediaProjection(resultCode, data)
+        mediaProjection = projectionManager.getMediaProjection(resultCode, intent)
         
         imageReader = ImageReader.newInstance(1080, 1920, android.graphics.PixelFormat.RGBA_8888, 2)
         

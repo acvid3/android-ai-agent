@@ -52,7 +52,7 @@ data class UiMapInput(
 
 data class OCRResult(val textRegions: List<TextRegion>)
 data class AccessibilityResult(val nodes: List<AccessibilityNode>)
-data class TextRegion(val text: String, val bounds: android.graphics.Rect)
+data class TextRegion(val text: String, val bounds: android.graphics.Rect, val confidence: Float = 1f)
 data class AccessibilityNode(val node: android.view.accessibility.AccessibilityNodeInfo)
 data class TemplateMatch(val templateName: String, val bounds: android.graphics.Rect, val confidence: Float)
 

@@ -42,7 +42,7 @@ class ApkDistributionManager(
                 val processBuilder = ProcessBuilder(
                     "python3",
                     pythonScript,
-                    "--apk-path", apkPath.absolutePath,
+                    "--apk-path", apkFile.absolutePath,
                     "--port", "8080"
                 )
                 

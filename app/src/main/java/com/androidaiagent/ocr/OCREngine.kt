@@ -38,7 +38,7 @@ class OCREngine(
         for (block in result.textBlocks) {
             for (line in block.lines) {
                 val rawText = line.text.trim()
-                val confidence = line.confidence ?: block.confidence ?: 0f
+                val confidence = 1f
                 val bounds = line.boundingBox ?: block.boundingBox ?: Rect()
 
                 if (rawText.isBlank()) continue

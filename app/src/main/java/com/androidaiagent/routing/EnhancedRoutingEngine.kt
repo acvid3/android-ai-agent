@@ -6,6 +6,7 @@ import com.androidaiagent.state.contextmemory.ContextMemory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.androidaiagent.routing.RouteScoreMatch
 
 class EnhancedRoutingEngine(
     private val contextMemory: ContextMemory
@@ -32,7 +33,7 @@ class EnhancedRoutingEngine(
         fallbackRoutes[from] = to
     }
     
-    fun identifyRoute(uiMap: UiMap): RouteMatch {
+    fun identifyRoute(uiMap: UiMap): RouteScoreMatch {
         val screen = uiMap.currentScreen
         val scores = mutableMapOf<String, Float>()
         
@@ -55,7 +56,7 @@ class EnhancedRoutingEngine(
                 contextMemory.recordRouteTransition(previousRoute, bestMatch.key)
             }
             
-            return RouteMatch(
+            return RouteScoreMatch(
                 route = routes[bestMatch.key]!!,
                 confidence = bestMatch.value,
                 matchedElements = getMatchedElements(routes[bestMatch.key]!!, screen)
@@ -114,7 +115,7 @@ class EnhancedRoutingEngine(
         return matched
     }
     
-    private fun handleUnknownRoute(screen: UiScreen): RouteMatch {
+    private fun handleUnknownRoute(screen: UiScreen): RouteScoreMatch {
         val previousRoute = _currentRoute.value
         val fallback = previousRoute?.let { fallbackRoutes[it] }
         
@@ -123,7 +124,7 @@ class EnhancedRoutingEngine(
             _routeConfidence.value = 0.3f
             recordTransition(previousRoute, fallback)
             
-            return RouteMatch(
+            return RouteScoreMatch(
                 route = routes[fallback]!!,
                 confidence = 0.3f,
                 matchedElements = emptyList()
@@ -133,7 +134,7 @@ class EnhancedRoutingEngine(
         _currentRoute.value = "unknown"
         _routeConfidence.value = 0f
         
-        return RouteMatch(
+        return RouteScoreMatch(
             route = Route(
                 name = "unknown",
                 description = "Unknown screen",

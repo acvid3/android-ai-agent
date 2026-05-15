@@ -7,6 +7,7 @@ import com.androidaiagent.core.eventbus.EventBus
 import com.androidaiagent.core.eventbus.GlobalEventBus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import android.accessibilityservice.AccessibilityService as AndroidAccessibilityService
 
 class RecoverySystem(
     private val accessibilityService: AccessibilityService,
@@ -172,7 +173,7 @@ class ScreenFreezeRecoveryStrategy : RecoveryStrategy {
 
 class ReturnToHomeRecoveryStrategy : RecoveryStrategy {
     override suspend fun execute(context: RecoveryContext, accessibilityService: AccessibilityService): Boolean {
-        accessibilityService.performGlobalAction(android.view.accessibility.AccessibilityService.GLOBAL_ACTION_HOME)
+        accessibilityService.performGlobalAction(AndroidAccessibilityService.GLOBAL_ACTION_HOME)
         kotlinx.coroutines.delay(1000)
         return true
     }

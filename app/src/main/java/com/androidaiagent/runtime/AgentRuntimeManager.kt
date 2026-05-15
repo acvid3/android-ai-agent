@@ -96,7 +96,8 @@ class AgentRuntimeManager(
     val screenStream: ScreenStateStream get() = screenStateStream
     val resourceState: ResourceManager get() = resourceManager
     val worldStateStore: WorldStateStore get() = worldStateStoreImpl
-    val worldState: StateFlow<com.androidaiagent.world.WorldStateSnapshot> = worldStateStoreImpl.snapshot
+    val worldState: StateFlow<com.androidaiagent.world.WorldStateSnapshot>
+        get() = worldStateStoreImpl.snapshot
 
     private val sharedAppState = SharedAppState()
     private val screenStateStream = ScreenStateStream()

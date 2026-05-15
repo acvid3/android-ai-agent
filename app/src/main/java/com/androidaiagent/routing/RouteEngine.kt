@@ -34,6 +34,7 @@ class RouteEngine(
     }
     
     fun matchRoute(uiMap: UiMap): RouteMatch {
+        val previousRoute = _currentRoute.value?.routeName
         val matches = routeDefinitions.values.map { route ->
             val confidence = calculateRouteConfidence(route, uiMap)
             RouteMatch(route.name, confidence, route)
@@ -146,6 +147,7 @@ class RouteEngine(
 data class RouteDefinition(
     val name: String,
     val description: String,
+    val purpose: String = description,
     val packageName: String? = null,
     val activityName: String? = null,
     val expectedButtons: List<String> = emptyList(),

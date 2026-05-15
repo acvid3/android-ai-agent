@@ -18,8 +18,9 @@ class UiMapGenerationStage : PipelineStage<UiMapInput, UiMap>() {
         
         input.accessibilityResult.nodes.forEach { node ->
             if (node.node.isClickable) {
+                val bounds = Rect().also { node.node.getBoundsInScreen(it) }
                 elements.add(DetectedButton(
-                    bounds = Rect(node.node.boundsInScreen),
+                    bounds = bounds,
                     confidence = 0.9f,
                     text = node.node.text?.toString(),
                     contentDescription = node.node.contentDescription?.toString(),

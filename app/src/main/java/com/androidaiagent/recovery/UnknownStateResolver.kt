@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import com.androidaiagent.ocr.OCREngine
 import com.androidaiagent.ui.model.UiMap
 import com.androidaiagent.vision.ModalDetectionEngine
+import com.androidaiagent.vision.ModalDetectionResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

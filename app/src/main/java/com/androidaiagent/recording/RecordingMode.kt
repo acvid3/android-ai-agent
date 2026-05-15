@@ -119,7 +119,7 @@ class RecordingMode(
         routeActions.forEach { (routeName, actions) ->
             val buttons = actions.mapNotNull { it.target }.distinct()
             val elements = routeElements[routeName] ?: emptyList()
-            val textElements = elements.mapNotNull { it.element.text }.distinct()
+            val textElements = elements.mapNotNull { it.element.asTextLabel() }.distinct()
             
             val navigationTargets = recordedTransitions
                 .filter { it.from == routeName }
@@ -154,6 +154,17 @@ class RecordingMode(
         currentRoute = null
         _actionCount.value = 0
         _sessionId.value = null
+    }
+}
+
+private fun com.androidaiagent.ui.model.UiElement.asTextLabel(): String? {
+    return when (this) {
+        is com.androidaiagent.ui.model.DetectedButton -> text ?: contentDescription
+        is com.androidaiagent.ui.model.DetectedText -> text
+        is com.androidaiagent.ui.model.DetectedTextField -> hintText ?: currentText
+        is com.androidaiagent.ui.model.DetectedIcon -> resourceId
+        is com.androidaiagent.ui.model.DetectedImage -> contentDescription
+        is com.androidaiagent.ui.model.InteractionZone -> zoneType.name
     }
 }
 

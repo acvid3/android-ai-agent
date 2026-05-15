@@ -4,7 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 
-class EventBus {
+open class EventBus {
     private val eventChannel = Channel<Event>(capacity = Channel.UNLIMITED)
     
     val eventFlow: Flow<Event> = eventChannel.receiveAsFlow()
