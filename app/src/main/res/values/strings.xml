@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Agent</string>
+    <string name="overlay_icon">AI Agent</string>
+    <string name="permission_required">Accessibility service permission required</string>
+    <string name="enable_accessibility">Enable Accessibility Service</string>
+</resources>
