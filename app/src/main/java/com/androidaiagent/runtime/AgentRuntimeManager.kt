@@ -30,7 +30,6 @@ import com.androidaiagent.action.ExecutionVerifier
 import com.androidaiagent.action.VerificationStatus
 import com.androidaiagent.accessibility.AccessibilityService
 import com.androidaiagent.screencapture.ScreenCaptureService
-import com.androidaiagent.recovery.RecoverySystem
 import com.androidaiagent.recovery.UnknownStateResolver
 import com.androidaiagent.replay.ReplaySession
 import com.androidaiagent.vision.stabilization.ScreenStabilizationLayer
@@ -136,7 +135,6 @@ class AgentRuntimeManager(
     private var actionQueue: ActionQueue? = null
     private var actionExecutor: ActionExecutor? = null
     private var executionAuthority: ExecutionAuthority? = null
-    private var recoverySystem: RecoverySystem? = null
     private var watchdogSupervisor: WatchdogSupervisor? = null
     private var aiProvider: com.androidaiagent.ai.AIProvider? = null
     private var runtimeMode: RuntimeMode = RuntimeMode.FULL_AUTONOMOUS
@@ -303,8 +301,6 @@ class AgentRuntimeManager(
         worldStateStoreImpl.updateQueue(actionQueue!!.queueSize.value)
         worldStateStoreImpl.updateHealth(HealthStatus.HEALTHY)
         worldStateStoreImpl.updateExecutionOwner("AgentRuntimeManager")
-
-        recoverySystem = RecoverySystem(accessibilityService!!, runtimeScope)
     }
     
     private fun startDeterministicFlow() {
@@ -478,7 +474,6 @@ class AgentRuntimeManager(
                 worldStateStoreImpl.updateAiStatus(com.androidaiagent.core.AIStatus.WAITING)
             }
             runtimeScheduler.markPhase(RuntimePhase.RECOVERY, now)
-            recoverySystem?.detectAndRecover(uiMap)
             worldStateStoreImpl.updateHealth(HealthStatus.RECOVERING)
             routeTransactionJournal.commit(routeTransactionIndex, success = false, reason = "unknown_state")
             diagnosticsSystem.logRuntimeTrace(frame.id, RuntimePhase.RECOVERY.name, routeMatch.routeName, null, "unknown_state", latencyProfiler.snapshot().frameProcessingMs)
@@ -489,7 +484,6 @@ class AgentRuntimeManager(
         if (sharedAppState.safetyStatus.value == com.androidaiagent.core.SafetyStatus.UNSAFE) {
             runtimeScheduler.markPhase(RuntimePhase.RECOVERY, now)
             worldStateStoreImpl.updateHealth(HealthStatus.RECOVERING)
-            recoverySystem?.detectAndRecover(uiMap)
             routeTransactionJournal.commit(routeTransactionIndex, success = false, reason = "unsafe_state")
             diagnosticsSystem.logRuntimeTrace(frame.id, RuntimePhase.RECOVERY.name, routeMatch.routeName, null, "unsafe_state", latencyProfiler.snapshot().frameProcessingMs)
             delay(1000)
@@ -677,9 +671,6 @@ class AgentRuntimeManager(
                         if (routeMatch.routeName.isNotBlank() && afterRoute?.routeName != null) {
                             routeEngine?.getRouteGraph()?.invalidateTransition(routeMatch.routeName, afterRoute.routeName)
                         }
-                        if (afterUiMap != null) {
-                            recoverySystem?.detectAndRecover(afterUiMap)
-                        }
                         worldStateStoreImpl.updateAction("${pendingAction.action} on ${pendingAction.target}", ExecutionStatus.FAILED)
                         routeTransactionJournal.commit(routeTransactionIndex, success = false, reason = verification.reason)
                         consecutiveFailures++
@@ -733,7 +724,6 @@ class AgentRuntimeManager(
         actionQueue = null
         _actionQueueState.value = null
         executionAuthority = null
-        recoverySystem = null
         watchdogSupervisor = null
         replaySession.clear()
         perceptionCache.clear()
