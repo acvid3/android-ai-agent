@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">AI Agent</string>
     <string name="overlay_icon">AI Agent</string>
+    <string name="accessibility_service_description">AI Agent accessibility service</string>
     <string name="permission_required">Accessibility service permission required</string>
     <string name="enable_accessibility">Enable Accessibility Service</string>
 </resources>
