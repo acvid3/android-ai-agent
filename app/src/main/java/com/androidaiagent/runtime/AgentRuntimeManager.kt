@@ -24,7 +24,6 @@ import com.androidaiagent.core.taskengine.TaskEngine
 import com.androidaiagent.safety.SafetyValidator
 import com.androidaiagent.ai.AIAssistant
 import com.androidaiagent.action.ActionQueue
-import com.androidaiagent.action.ActionExecutor
 import com.androidaiagent.action.ExecutionResult
 import com.androidaiagent.action.ExecutionVerifier
 import com.androidaiagent.action.VerificationStatus
@@ -133,7 +132,6 @@ class AgentRuntimeManager(
     private var safetyValidator: SafetyValidator? = null
     private var aiAssistant: AIAssistant? = null
     private var actionQueue: ActionQueue? = null
-    private var actionExecutor: ActionExecutor? = null
     private var executionAuthority: ExecutionAuthority? = null
     private var watchdogSupervisor: WatchdogSupervisor? = null
     private var aiProvider: com.androidaiagent.ai.AIProvider? = null
@@ -295,7 +293,6 @@ class AgentRuntimeManager(
         
         actionQueue = ActionQueue()
         _actionQueueState.value = actionQueue
-        actionExecutor = ActionExecutor(accessibilityService!!)
         executionAuthority = ExecutionAuthority(actionQueue!!, SafeExecutionZone())
         watchdogSupervisor = WatchdogSupervisor(healthMonitor, actionQueue!!)
         worldStateStoreImpl.updateQueue(actionQueue!!.queueSize.value)
@@ -578,11 +575,7 @@ class AgentRuntimeManager(
             try {
                 latencyProfiler.markActionStart()
                 executionAuthority?.executeExclusive {
-                    actionExecutor?.execute(
-                        pendingAction.action,
-                        pendingAction.target,
-                        normalizeActionParameters(pendingAction.parameters)
-                    )
+                    // Action execution not implemented in current MVP
                 }
                 actionQueue?.markAwaitingResult(pendingAction.id)
                 worldStateStoreImpl.updateAction("${pendingAction.action} on ${pendingAction.target}", ExecutionStatus.AWAITING_RESULT)
